@@ -4,10 +4,10 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import axios from "axios"
-import { ExternalLink, Key, ShieldCheck, UserCheck, Play, Copy, CheckCircle2, XCircle } from "lucide-react"
+import { ExternalLink, Key, ShieldCheck, UserCheck, Copy, CheckCircle2, XCircle } from "lucide-react"
 
 export default function TestToolsPage() {
   const [apiKey, setApiKey] = useState("your-api-key-here")
