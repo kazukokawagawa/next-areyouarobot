@@ -187,7 +187,7 @@ export default function VerificationPage({ params }: { params: Promise<{ ticket:
                  ) : (
                     <div className="relative flex flex-col items-center justify-center min-h-19.5 min-w-76">
                         {!isRecaptchaLoaded && (
-                             <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50/80 z-10 rounded-md border border-dashed border-gray-200">
+                             <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50/80 z-10 rounded-md border border-dashed border-gray-200 pointer-events-none">
                                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground mb-2" />
                                 <span className="text-xs text-muted-foreground font-medium">正在加载安全组件...</span>
                              </div>
