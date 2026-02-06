@@ -37,6 +37,7 @@
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "vercel": "^50.12.3",
     "wrangler": "^4.63.0"
   }
 }
