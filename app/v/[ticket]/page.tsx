@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, use } from "react"
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile"
 import ReCAPTCHA from "react-google-recaptcha"
 import { Button } from "@/components/ui/button"
@@ -14,11 +14,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { toast } from "sonner"
 import { ShieldCheck, CheckCircle2, Loader2 } from "lucide-react"
+import axios from "axios"
 
-export default function VerificationPage() {
+export default function VerificationPage({ params }: { params: Promise<{ ticket: string }> }) {
+  const { ticket } = use(params)
   const [step, setStep] = useState<"start" | "cloudflare" | "ready_to_submit" | "google" | "success">("start")
   const [cfToken, setCfToken] = useState<string | null>(null)
   const [gToken, setGToken] = useState<string | null>(null)
+  const [code, setCode] = useState<string | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isRecaptchaLoaded, setIsRecaptchaLoaded] = useState(false)
@@ -55,15 +58,25 @@ export default function VerificationPage() {
   const finalSubmit = async (cf: string, g: string) => {
     setIsSubmitting(true)
     try {
-      // 模拟API调用
-      console.log("提交 Token:", { cf, g })
-      await new Promise(resolve => setTimeout(resolve, 1500)) // 模拟网络延迟
-      
-      setStep("success")
-      setIsDialogOpen(false)
-      toast.success("所有验证已通过！")
-    } catch (error) {
-      toast.error("提交失败，请重试")
+      const res = await axios.post("/api/verify/callback", {
+        ticket,
+        cf_token: cf,
+        g_token: g
+      })
+
+      if (res.data.code === 0) {
+        setStep("success")
+        setCode(res.data.data.code)
+        setIsDialogOpen(false)
+        toast.success("所有验证已通过！")
+      } else {
+        toast.error(res.data.msg || "验证失败，请重试")
+        recaptchaRef.current?.reset()
+      }
+    } catch (error: any) {
+      console.error(error)
+      toast.error(error.response?.data?.msg || "提交失败，请重试")
+      recaptchaRef.current?.reset()
     } finally {
       setIsSubmitting(false)
     }
@@ -93,9 +106,9 @@ export default function VerificationPage() {
 
           {(step === "cloudflare" || step === "ready_to_submit") && (
             <div className="w-full flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-300">
-              <div className="relative min-h-[65px] flex justify-center w-full">
+              <div className="relative min-h-16.25 flex justify-center w-full">
                  <Turnstile 
-                    siteKey={process.env.NEXT_PUBLIC_CLOUDFLARE_SITE_KEY!} 
+                    siteKey={process.env.NEXT_PUBLIC_CLOUDFLARE_SITE_KEY!}  
                     onSuccess={handleCloudflareSuccess}
                     ref={turnstileRef}
                     options={{
@@ -125,6 +138,12 @@ export default function VerificationPage() {
               <div>
                 <h3 className="text-xl font-bold text-gray-900">验证通过</h3>
                 <p className="text-gray-500 mt-2">您已通过人机验证，请返回群聊。</p>
+                {code && (
+                    <div className="mt-4 p-4 bg-gray-100 rounded-lg border border-gray-200">
+                        <p className="text-sm text-gray-500 mb-1">验证码</p>
+                        <p className="text-2xl font-mono font-bold tracking-widest text-primary">{code}</p>
+                    </div>
+                )}
               </div>
               <Button className="w-full mt-4" variant="outline" onClick={() => window.location.reload()}>
                 重新验证
@@ -138,7 +157,7 @@ export default function VerificationPage() {
       <Dialog open={isDialogOpen} onOpenChange={() => {
         // Prevent closing by user interaction
       }}>
-        <DialogContent className="sm:max-w-[400px]" showCloseButton={false}>
+        <DialogContent className="sm:max-w-100" showCloseButton={false}>
             <DialogHeader>
                 <DialogTitle>安全检查</DialogTitle>
                 <DialogDescription>
@@ -152,7 +171,7 @@ export default function VerificationPage() {
                         <p className="text-sm text-gray-500 font-medium">正在提交验证结果...</p>
                     </div>
                  ) : (
-                    <div className="relative flex flex-col items-center justify-center min-h-[78px] min-w-[304px]">
+                    <div className="relative flex flex-col items-center justify-center min-h-19.5 min-w-76">
                         {!isRecaptchaLoaded && (
                              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50/80 z-10 rounded-md border border-dashed border-gray-200">
                                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground mb-2" />
