@@ -18,7 +18,21 @@ import { toast } from "sonner"
 import { ShieldCheck, CheckCircle2, Loader2 } from "lucide-react"
 import axios from "axios"
 
+declare global {
+  interface Window {
+    recaptchaOptions?: {
+      useRecaptchaNet?: boolean
+    }
+  }
+}
+
 export default function VerificationPage({ params }: { params: Promise<{ ticket: string }> }) {
+  if (typeof window !== "undefined") {
+    window.recaptchaOptions = {
+      useRecaptchaNet: true,
+    }
+  }
+
   const { ticket } = use(params)
   const [step, setStep] = useState<"start" | "cloudflare" | "ready_to_submit" | "google" | "success">("start")
   const [cfToken, setCfToken] = useState<string | null>(null)
@@ -75,9 +89,10 @@ export default function VerificationPage({ params }: { params: Promise<{ ticket:
         toast.error(res.data.msg || "验证失败，请重试")
         recaptchaRef.current?.reset()
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error(error)
-      toast.error(error.response?.data?.msg || "提交失败，请重试")
+      const msg = axios.isAxiosError(error) ? error.response?.data?.msg : undefined
+      toast.error(msg || "提交失败，请重试")
       recaptchaRef.current?.reset()
     } finally {
       setIsSubmitting(false)
