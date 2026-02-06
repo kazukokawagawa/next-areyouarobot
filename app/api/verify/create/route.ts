@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ticketStore, cleanExpiredTickets } from "@/lib/storage";
-import { randomUUID } from "crypto";
+import { saveTicket, cleanExpiredTickets } from "@/lib/storage";
+
+export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
         }
     }
 
-    const body = await request.json();
+    const body = await request.json() as { group_id: string | number; user_id: string | number };
     const { group_id, user_id } = body;
 
     if (!group_id || !user_id) {
@@ -28,10 +29,10 @@ export async function POST(request: NextRequest) {
         cleanExpiredTickets();
     }
 
-    const ticket = randomUUID().replace(/-/g, "");
+    const ticket = crypto.randomUUID().replace(/-/g, "");
     const now = Date.now();
 
-    ticketStore.set(ticket, {
+    await saveTicket({
       ticket,
       group_id: String(group_id),
       user_id: String(user_id),

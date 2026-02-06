@@ -1,5 +1,7 @@
 "use client"
 
+export const runtime = 'edge';
+
 import { useState, useRef, use } from "react"
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile"
 import ReCAPTCHA from "react-google-recaptcha"

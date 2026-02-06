@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ticketStore } from "@/lib/storage";
+import { findVerifiedTicket, deleteTicket } from "@/lib/storage";
+
+export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +14,7 @@ export async function POST(request: NextRequest) {
         }
     }
 
-    const body = await request.json();
+    const body = await request.json() as { group_id: string | number; code: string };
     const { group_id, code } = body;
     // user_id is optional in spec but useful for strict check
 
@@ -20,16 +22,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ code: 400, msg: "参数错误：缺少必填参数 group_id 或 code" }, { status: 400 });
     }
 
-    // Find ticket by code and group_id
-    // In efficient implementation, we should have a secondary index or lookup by code if code is unique-ish
-    // But iterating map is fine for small scale
-    let foundTicket = null;
-    for (const [key, value] of ticketStore.entries()) {
-        if (value.group_id === String(group_id) && value.code === String(code) && value.verified) {
-            foundTicket = value;
-            break;
-        }
-    }
+    // Find verified ticket
+    const foundTicket = await findVerifiedTicket(String(group_id), String(code));
 
     if (!foundTicket) {
         return NextResponse.json({ code: 400, msg: "验证失败：验证码不存在或已失效" }, { status: 400 });
@@ -37,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     // Success
     // Optionally remove ticket after use to prevent replay
-    ticketStore.delete(foundTicket.ticket);
+    await deleteTicket(foundTicket.ticket);
 
     return NextResponse.json({
       code: 0,

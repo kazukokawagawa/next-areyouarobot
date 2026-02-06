@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ticketStore } from "@/lib/storage";
-import axios from "axios";
+import { getTicket, updateTicket } from "@/lib/storage";
+
+export const runtime = 'edge';
 
 // Helper to generate a 6-digit code
 function generateCode() {
@@ -26,7 +27,7 @@ async function verifyCloudflare(token: string, ip: string) {
       body: formData,
     });
 
-    const outcome = await result.json();
+    const outcome = await result.json() as { success: boolean; [key: string]: any };
     if (!outcome.success) {
         console.error("Cloudflare verification failed:", outcome);
     }
@@ -57,7 +58,7 @@ async function verifyGoogle(token: string, ip: string) {
         method: 'POST',
     });
 
-    const outcome = await result.json();
+    const outcome = await result.json() as { success: boolean; [key: string]: any };
     if (!outcome.success) {
         console.error("Google verification failed:", outcome);
     }
@@ -70,14 +71,14 @@ async function verifyGoogle(token: string, ip: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await request.json() as { ticket: string; cf_token: string; g_token: string };
     const { ticket, cf_token, g_token } = body;
 
     if (!ticket || !cf_token || !g_token) {
       return NextResponse.json({ code: 400, msg: "参数错误：缺少必要参数" }, { status: 400 });
     }
 
-    const ticketData = ticketStore.get(ticket);
+    const ticketData = await getTicket(ticket);
     if (!ticketData) {
       return NextResponse.json({ code: 404, msg: "验证链接已过期或不存在" }, { status: 404 });
     }
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
     const code = generateCode();
     ticketData.verified = true;
     ticketData.code = code;
-    ticketStore.set(ticket, ticketData); // Update store
+    await updateTicket(ticket, ticketData); // Update store
 
     return NextResponse.json({
       code: 0,
