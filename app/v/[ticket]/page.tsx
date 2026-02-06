@@ -147,9 +147,6 @@ export default function VerificationPage({ params }: { params: Promise<{ ticket:
                     </div>
                 )}
               </div>
-              <Button className="w-full mt-4" variant="outline" onClick={() => window.location.reload()}>
-                重新验证
-              </Button>
             </div>
           )}
 
