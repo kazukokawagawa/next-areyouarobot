@@ -125,12 +125,12 @@
   }
 }
 
-/* Fix Google reCAPTCHA z-index issues in Modals */
-iframe[title="recaptcha challenge expires in two minutes"] {
+iframe[src*="recaptcha"] {
   z-index: 2147483647 !important;
   pointer-events: auto !important;
 }
 
+.grecaptcha-badge,
 .g-recaptcha-bubble-arrow {
   z-index: 2147483647 !important;
 }
@@ -140,7 +140,6 @@ body > div[style*="z-index: 2000000000"] {
   pointer-events: auto !important;
 }
 
-/* Ensure Radix UI Dialog doesn't block interactions with reCAPTCHA */
 [data-radix-pointer-down-scrim] {
-    z-index: 2147483646 !important;
+  z-index: 2147483646 !important;
 }

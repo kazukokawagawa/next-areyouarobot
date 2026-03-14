@@ -36,7 +36,6 @@ export default function VerificationPage({ params }: { params: Promise<{ ticket:
   const { ticket } = use(params)
   const [step, setStep] = useState<"start" | "cloudflare" | "ready_to_submit" | "google" | "success">("start")
   const [cfToken, setCfToken] = useState<string | null>(null)
-  const [gToken, setGToken] = useState<string | null>(null)
   const [code, setCode] = useState<string | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -63,7 +62,6 @@ export default function VerificationPage({ params }: { params: Promise<{ ticket:
 
   const handleGoogleChange = (token: string | null) => {
     if (token) {
-      setGToken(token)
       // 自动提交或稍微延迟
       setTimeout(() => {
         finalSubmit(cfToken!, token)
@@ -168,7 +166,7 @@ export default function VerificationPage({ params }: { params: Promise<{ ticket:
         </CardContent>
       </Card>
 
-      <Dialog open={isDialogOpen} onOpenChange={() => {
+      <Dialog modal={false} open={isDialogOpen} onOpenChange={() => {
         // Prevent closing by user interaction
       }}>
         <DialogContent className="sm:max-w-100" showCloseButton={false}>
@@ -192,7 +190,7 @@ export default function VerificationPage({ params }: { params: Promise<{ ticket:
                                 <span className="text-xs text-muted-foreground font-medium">正在加载安全组件...</span>
                              </div>
                         )}
-                        <div className="flex justify-center">
+                        <div className="flex justify-center touch-manipulation">
                              <ReCAPTCHA
                                  ref={recaptchaRef}
                                  sitekey={process.env.NEXT_PUBLIC_GOOGLE_SITE_KEY || ""}
